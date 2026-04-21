@@ -5,23 +5,24 @@ const fileInput = document.getElementById('fileInput');
 const fileInfo = document.getElementById('fileInfo');
 const convertBtn = document.getElementById('convertBtn');
 const status = document.getElementById('status');
+const btnText = convertBtn.querySelector('.btn-text') || convertBtn;
 
-uploadArea.addEventListener('click', function() {
-    fileInput.click();
-});
+const API_URL = 'http://localhost:5000/convert';
 
-uploadArea.addEventListener('dragover', function(e) {
+uploadArea.addEventListener('click', () => fileInput.click());
+
+uploadArea.addEventListener('dragover', (e) => {
     e.preventDefault();
     uploadArea.style.borderColor = '#2C6BFF';
     uploadArea.style.background = 'rgba(44, 107, 255, 0.05)';
 });
 
-uploadArea.addEventListener('dragleave', function() {
+uploadArea.addEventListener('dragleave', () => {
     uploadArea.style.borderColor = 'rgba(255, 255, 255, 0.2)';
     uploadArea.style.background = '#0A0C0F';
 });
 
-uploadArea.addEventListener('drop', function(e) {
+uploadArea.addEventListener('drop', (e) => {
     e.preventDefault();
     uploadArea.style.borderColor = 'rgba(255, 255, 255, 0.2)';
     uploadArea.style.background = '#0A0C0F';
@@ -30,7 +31,7 @@ uploadArea.addEventListener('drop', function(e) {
     if (file) handleFile(file);
 });
 
-fileInput.addEventListener('change', function(e) {
+fileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) handleFile(file);
 });
@@ -41,8 +42,8 @@ function handleFile(file) {
         return;
     }
     
-    if (file.size > 10 * 1024 * 1024) {
-        showStatus('❌ Файл слишком большой (макс. 10 MB)', 'error');
+    if (file.size > 20 * 1024 * 1024) {
+        showStatus('❌ Файл слишком большой (макс. 20 MB)', 'error');
         return;
     }
     
@@ -62,106 +63,53 @@ function hideStatus() {
     status.classList.remove('show');
 }
 
-function cleanLatexText(text) {
-    const docMatch = text.match(/\\begin\{document\}([\s\S]*?)\\end\{document\}/);
-    let content = docMatch ? docMatch[1] : text;
-    
-    content = content.replace(/\\maketitle\s*/g, '');
-    content = content.replace(/\\section\*?\{(.*?)\}/g, '\n\n$1\n\n');
-    content = content.replace(/\\subsection\*?\{(.*?)\}/g, '\n\n$1\n\n');
-    content = content.replace(/\\subsubsection\*?\{(.*?)\}/g, '\n\n$1\n\n');
-    content = content.replace(/\\textbf\{((?:[^{}]|\{[^{}]*\})*)\}/g, '$1');
-    content = content.replace(/\\textit\{((?:[^{}]|\{[^{}]*\})*)\}/g, '$1');
-    content = content.replace(/\\underline\{((?:[^{}]|\{[^{}]*\})*)\}/g, '$1');
-    content = content.replace(/\\emph\{((?:[^{}]|\{[^{}]*\})*)\}/g, '$1');
-    content = content.replace(/\\texttt\{((?:[^{}]|\{[^{}]*\})*)\}/g, '$1');
-    
-    content = content.replace(/\\begin\{itemize\}([\s\S]*?)\\end\{itemize\}/g, function(match, items) {
-        return items.split('\\item').filter(function(item) {
-            return item.trim();
-        }).map(function(item) {
-            return '• ' + item.trim();
-        }).join('\n');
-    });
-    
-    content = content.replace(/\\begin\{enumerate\}([\s\S]*?)\\end\{enumerate\}/g, function(match, items) {
-        let counter = 1;
-        return items.split('\\item').filter(function(item) {
-            return item.trim();
-        }).map(function(item) {
-            return (counter++) + '. ' + item.trim();
-        }).join('\n');
-    });
-    
-    content = content.replace(/\$\$([\s\S]*?)\$\$/g, '[$1]');
-    content = content.replace(/\$([^$]+)\$/g, '[$1]');
-    content = content.replace(/\\\[([\s\S]*?)\\\]/g, '[$1]');
-    content = content.replace(/\\begin\{equation\*?\}([\s\S]*?)\\end\{equation\*?\}/g, '[$1]');
-    content = content.replace(/\\begin\{table\}[\s\S]*?\\end\{table\}/g, '[Таблица]');
-    content = content.replace(/\\begin\{figure\}[\s\S]*?\\end\{figure\}/g, '[Рисунок]');
-    content = content.replace(/\\[a-zA-Z]+(\{[^}]*\})?/g, '');
-    content = content.replace(/[{}&]/g, '');
-    content = content.replace(/\\\\/g, '\n');
-    content = content.replace(/\\hline/g, '');
-    content = content.replace(/\n{3,}/g, '\n\n');
-    content = content.trim();
-    
-    return content || 'Документ пуст';
-}
-
-convertBtn.addEventListener('click', function() {
+convertBtn.addEventListener('click', async () => {
     if (!selectedFile) return;
     
+    const useReferences = document.getElementById('useReferences')?.checked || true;
+    
     convertBtn.disabled = true;
-    const originalText = convertBtn.textContent;
-    convertBtn.innerHTML = '<span class="spinner"></span>Конвертация...';
-    showStatus('⏳ Обработка файла...', 'info');
+    const originalHTML = convertBtn.innerHTML;
+    convertBtn.innerHTML = '<span class="spinner"></span>Конвертация через Pandoc...';
+    showStatus('⏳ Профессиональная конвертация с формулами...', 'info');
     
-    const reader = new FileReader();
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    formData.append('references', useReferences);
     
-    reader.onload = function(e) {
-        try {
-            const text = e.target.result;
-            
-            let title = selectedFile.name.replace('.tex', '');
-            const titleMatch = text.match(/\\title\{((?:[^{}]|\{[^{}]*\})*)\}/);
-            if (titleMatch) title = titleMatch[1].replace(/[{}]/g, '');
-            
-            let author = 'СФЕРА';
-            const authorMatch = text.match(/\\author\{((?:[^{}]|\{[^{}]*\})*)\}/);
-            if (authorMatch) author = authorMatch[1].replace(/[{}]/g, '');
-            
-            const cleanedText = cleanLatexText(text);
-            const date = new Date().toLocaleDateString('ru-RU');
-            
-            const wordHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + title + '</title><style>body{font-family:"Times New Roman",Times,serif;font-size:14pt;line-height:1.5;margin:2cm 2cm 2cm 2cm;color:#000;}h1{font-size:24pt;font-weight:bold;text-align:center;margin-bottom:10pt;}.subtitle{text-align:center;color:#666;border-bottom:1px solid #ccc;padding-bottom:15pt;margin-bottom:20pt;}h2{font-size:18pt;font-weight:bold;margin-top:20pt;margin-bottom:10pt;}p{margin:0 0 10pt 0;text-align:justify;text-indent:1.25cm;}.footer{margin-top:30pt;text-align:center;color:#999;font-size:10pt;border-top:1px solid #ccc;padding-top:10pt;}</style></head><body><h1>' + title + '</h1><div class="subtitle">' + author + ' • ' + date + '</div>' + cleanedText.split('\n\n').map(function(para) { return '<p>' + para.replace(/\n/g, '<br>') + '</p>'; }).join('\n') + '<div class="footer">Создано в СФЕРА - Российский LaTeX редактор</div></body></html>';
-            
-            const blob = new Blob([wordHtml], { type: 'application/msword;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = title.replace(/[^a-zA-Zа-яА-Я0-9]/g, '_') + '.doc';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            showStatus('✅ Конвертация завершена! Файл скачан.', 'success');
-            
-        } catch (error) {
-            console.error('Ошибка:', error);
-            showStatus('❌ Ошибка: ' + error.message, 'error');
-        } finally {
-            convertBtn.disabled = false;
-            convertBtn.textContent = originalText;
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Ошибка сервера');
         }
-    };
-    
-    reader.onerror = function() {
-        showStatus('❌ Ошибка чтения файла', 'error');
+        
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = selectedFile.name.replace('.tex', '.docx');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        showStatus('✅ Конвертация завершена! Файл DOCX с редактируемыми формулами скачан.', 'success');
+        
+    } catch (error) {
+        console.error('Ошибка:', error);
+        
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            showStatus('❌ Сервер не запущен. Запустите: python converter.py', 'error');
+        } else {
+            showStatus('❌ Ошибка: ' + error.message, 'error');
+        }
+    } finally {
         convertBtn.disabled = false;
-        convertBtn.textContent = originalText;
-    };
-    
-    reader.readAsText(selectedFile);
+        convertBtn.innerHTML = originalHTML;
+    }
 });

@@ -8,23 +8,38 @@
 </head>
 <body>
     <div class="container">
-        <h1>LATEX <span>→ Word</span></h1>
-        <p class="subtitle">Конвертер LaTeX в Microsoft Word</p>
+        <div class="logo">LaTeX</div>
+        <h1>LaTeX <span>→ Word</span></h1>
+        <p class="subtitle">Профессиональная конвертация с редактируемыми формулами</p>
+        
+        <div class="features">
+            <div class="feature">✅ Редактируемые формулы (OMML)</div>
+            <div class="feature">✅ Сохранение структуры документа</div>
+            <div class="feature">✅ Правильные абзацы и отступы</div>
+        </div>
         
         <div class="upload-area" id="uploadArea">
             <input type="file" id="fileInput" accept=".tex" style="display: none;">
             <div class="file-icon">📄</div>
             <h3>Выберите или перетащите .tex файл</h3>
-            <p>Поддерживаются файлы до 10 MB</p>
+            <p>Поддерживаются файлы до 20 MB</p>
         </div>
         
         <div class="file-info" id="fileInfo"></div>
         
-        <button class="btn" id="convertBtn" disabled>Конвертировать в Word</button>
+        <div class="options">
+            <label>
+                <input type="checkbox" id="useReferences" checked> Использовать ссылки и библиографию
+            </label>
+        </div>
+        
+        <button class="btn" id="convertBtn" disabled>
+            <span class="btn-text">Конвертировать в DOCX</span>
+        </button>
         
         <div class="status" id="status"></div>
         
-        <p class="footer-note">СФЕРА • Курсовой проект • 2026</p>
+        <p class="footer-note">СФЕРА • Профессиональный конвертер • 2026</p>
     </div>
 
     <script src="script.js"></script>
