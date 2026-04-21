@@ -8,30 +8,24 @@
 </head>
 <body>
     <div class="container">
-        <div class="logo">LaTeX</div>
+        <div class="logo">СФЕРА</div>
         <h1>LaTeX <span>→ Word</span></h1>
-        <p class="subtitle">Профессиональная конвертация с редактируемыми формулами</p>
+        <p class="subtitle">Профессиональная конвертация в DOCX</p>
         
         <div class="features">
-            <div class="feature">✅ Редактируемые формулы (OMML)</div>
-            <div class="feature">✅ Сохранение структуры документа</div>
-            <div class="feature">✅ Правильные абзацы и отступы</div>
+            <div class="feature">✅ Редактируемый текст</div>
+            <div class="feature">✅ Формулы в скобках [ ]</div>
+            <div class="feature">✅ Сохранение структуры</div>
         </div>
         
         <div class="upload-area" id="uploadArea">
-            <input type="file" id="fileInput" accept=".tex" style="display: none;">
+            <input type="file" id="fileInput" accept=".tex,.txt,text/plain" style="display: none;">
             <div class="file-icon">📄</div>
             <h3>Выберите или перетащите .tex файл</h3>
-            <p>Поддерживаются файлы до 20 MB</p>
+            <p>Поддерживаются файлы до 10 MB</p>
         </div>
         
         <div class="file-info" id="fileInfo"></div>
-        
-        <div class="options">
-            <label>
-                <input type="checkbox" id="useReferences" checked> Использовать ссылки и библиографию
-            </label>
-        </div>
         
         <button class="btn" id="convertBtn" disabled>
             <span class="btn-text">Конвертировать в DOCX</span>
@@ -39,7 +33,9 @@
         
         <div class="status" id="status"></div>
         
-        <p class="footer-note">СФЕРА • Профессиональный конвертер • 2026</p>
+        <p class="footer-note">
+            СФЕРА • Курсовой проект • Саакова В.А • 2026
+        </p>
     </div>
 
     <script src="script.js"></script>
